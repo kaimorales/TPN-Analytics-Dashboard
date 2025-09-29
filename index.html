@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TPN Analytics • Pitt</title>
+  <meta name="description" content="The Pitt News analytics portal (Looker Studio embedded)" />
+  <meta name="color-scheme" content="light dark" />
+  <style>
+    /* ===== Pitt Theme ===== */
+    :root{
+      --pitt-blue:#003594;
+      --pitt-gold:#FFB81C;
+      --ink:#0b1020;
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --line: #e6e8f0;
+      --shadow: 0 10px 30px rgba(0,0,0,.06);
+    }
+    @media (prefers-color-scheme: dark){
+      :root{
+        --bg:#0b1020;
+        --card:#0f162e;
+        --ink:#f5f7ff;
+        --muted:#9aa3b2;
+        --line:#1f2a44;
+        --shadow: 0 10px 30px rgba(0,0,0,.35);
+      }
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 600px at 10% -10%, rgba(251, 251, 251, 0.12), transparent 60%),
+                  radial-gradient(1200px 700px at 110% 10%, rgba(255,184,28,.14), transparent 60%),
+                  var(--bg);
+      color:var(--ink);
+      display:flex; flex-direction:column;
+    }
+
+    /* ===== Header / Nav ===== */
+    header{
+      position:sticky; top:0; z-index:40;
+      background: color-mix(in oklab, var(--card) 92%, transparent);
+      border-bottom:1px solid var(--line);
+      backdrop-filter: saturate(120%) blur(8px);
+    }
+    .wrap{max-width:1200px; margin:0 auto; padding:12px 16px;}
+    .brand{display:flex; align-items:center; gap:12px}
+    .brand .logo{
+      width:34px; height:34px; border-radius:8px;
+      background: linear-gradient(135deg, var(--pitt-blue), #022a73);
+      display:grid; place-items:center; color:var(--pitt-gold); font-weight:800;
+      box-shadow: 0 4px 14px rgba(0,53,148,.35), inset 0 0 0 2px rgba(255,255,255,.08);
+    }
+    .brand h1{font-size:18px; margin:0; letter-spacing:.2px}
+    nav{display:flex; gap:8px; flex-wrap:wrap; padding-top:10px}
+    .tab{
+      appearance:none; border:1px solid color-mix(in oklab, var(--pitt-blue) 25%, var(--line));
+      background: color-mix(in oklab, var(--card) 90%, transparent);
+      color:var(--ink);
+      padding:9px 14px; border-radius:999px; cursor:pointer; font-size:14px;
+      transition:180ms ease; box-shadow: 0 1px 0 rgba(0,0,0,.04);
+    }
+    .tab:hover{transform:translateY(-1px)}
+    .tab[aria-current="page"]{
+      background: linear-gradient(180deg, var(--pitt-blue), #022a73);
+      color:white; border-color:#022a73;
+      box-shadow:0 2px 0 rgba(0,0,0,.08), 0 8px 24px rgba(0,53,148,.35);
+    }
+
+    /* ===== Main / Iframe ===== */
+    main{flex:1}
+    .panel{max-width:1280px; margin:16px auto; padding:0 16px}
+    .card{
+      background:var(--card); border:1px solid var(--line); border-radius:16px;
+      box-shadow:var(--shadow);
+      padding:12px;
+    }
+    .iframe-wrap{position:relative; width:100%; aspect-ratio:16/9; overflow:hidden; border-radius:12px}
+    iframe{position:absolute; inset:0; width:100%; height:100%; border:0}
+
+    footer{
+      text-align:center; color:var(--muted); font-size:12px; padding:18px;
+      border-top:1px solid var(--line)
+    }
+
+    /* ===== Login Gate ===== */
+    .gate{
+      position:fixed; inset:0; z-index:100; display:grid; place-items:center;
+      background:
+        radial-gradient(900px 500px at 10% -10%, rgba(0,53,148,.18), transparent 60%),
+        radial-gradient(900px 500px at 110% 10%, rgba(255,184,28,.22), transparent 60%),
+        color-mix(in oklab, var(--bg) 88%, black);
+      backdrop-filter: blur(2px);
+    }
+    .gate .box{
+      width:min(92vw, 440px); border-radius:16px; padding:22px 20px 18px;
+      background:var(--card); border:1px solid var(--line); box-shadow:var(--shadow)
+    }
+    .gate h2{margin:.2rem 0 1rem; font-size:20px}
+    .input{
+      display:flex; gap:10px; margin-top:10px
+    }
+    input[type="password"]{
+      flex:1; padding:12px 14px; border-radius:12px; border:1px solid var(--line);
+      background: color-mix(in oklab, var(--card) 96%, white); color:var(--ink); font-size:14px;
+      outline:none; transition:120ms ease;
+    }
+    input[type="password"]:focus{border-color: color-mix(in oklab, var(--pitt-blue) 40%, var(--line)); box-shadow: 0 0 0 3px rgba(0,53,148,.12)}
+    .btn{
+      padding:12px 14px; border-radius:12px; border:1px solid #022a73;
+      background: linear-gradient(180deg, var(--pitt-blue), #022a73); color:white; cursor:pointer;
+      font-weight:600; letter-spacing:.2px; min-width:110px
+    }
+    .hint{color:var(--muted); font-size:12px; margin-top:10px}
+    .error{color:#d14343; font-size:13px; min-height:18px; margin-top:8px}
+    .badge{
+      display:inline-block; font-size:12px; padding:4px 8px; border-radius:999px; font-weight:700;
+      color:#0b1020; background:var(--pitt-gold); margin-left:6px
+    }
+
+    @media (min-height:900px){ .iframe-wrap{aspect-ratio:auto; height:80vh} }
+  </style>
+</head>
+<body>
+  <!-- ===== Login Gate (client-side) ===== -->
+  <div id="gate" class="gate" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
+    <div class="box">
+      <div class="brand" style="margin-bottom:6px">
+        <div class="logo">TPN</div>
+        <h2 id="gateTitle">TPN Analytics Access <span class="badge">Pitt</span></h2>
+      </div>
+      <p class="hint">This portal is for The Pitt News staff. Enter the access password.</p>
+      <div class="input">
+        <input id="pw" type="password" inputmode="text" autocomplete="current-password" placeholder="Enter password…" />
+        <button id="go" class="btn">Enter</button>
+      </div>
+      <div id="err" class="error" aria-live="polite"></div>
+      <p class="hint">Heads-up: This is a lightweight, client-side gate (sufficient for casual use, not for sensitive data).</p>
+    </div>
+  </div>
+
+  <!-- ===== Header / Nav ===== -->
+  <header>
+    <div class="wrap">
+      <div class="brand">
+        <div class="logo">TPN</div>
+        <h1>Analytics • Pitt</h1>
+      </div>
+      <nav aria-label="Dashboard pages">
+        <button class="tab" data-key="overview" aria-current="page">Overview</button>
+        <button class="tab" data-key="demographics">Demographics</button>
+        <button class="tab" data-key="traffic">Traffic & Top Pages</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ===== Main Embed ===== -->
+  <main>
+    <div class="panel">
+      <div class="card">
+        <div class="iframe-wrap" role="region" aria-label="Looker Studio dashboard">
+          <iframe
+            id="reportFrame"
+            title="Looker Studio Report"
+            src=""
+            allowfullscreen
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade">
+          </iframe>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    Live data via Looker Studio & Google Analytics • © The Pitt News
+  </footer>
+
+  <script>
+    /* ===========================
+       CONFIGURE THESE 4 THINGS
+       =========================== */
+
+    // 1) Replace with your Looker Studio EMBED URLs (File → Embed report → Copy URL) for each page
+    const PAGES = {
+      overview:     "https://lookerstudio.google.com/embed/reporting/6f0722c1-f80c-422d-877d-c24bf90a91bc/page/kIV1C",
+      demographics: "https://lookerstudio.google.com/embed/reporting/21c1bc2d-4edd-4394-b746-6df56b443f8c/page/p_ev5o6t54bd",
+      traffic:      "https://lookerstudio.google.com/embed/reporting/b665c6df-fc14-4f4b-9fa1-19e46bf3f39e/page/p_m63q9t54bd"
+    };
+
+    // 2) Set a password by storing its SHA-256 hex below (not secure, but hides plain text).
+    //    Default hash here corresponds to password: tpn-pitt-analytics
+    //    Generate your own by calling window.hashPW('your-password') in console once the page loads.
+    const PASSWORD_HASH_HEX = "dda1e863574952666866f1c58818c862ba1bc6570d63d5d5b8833345967e0a59"; // 
+
+    // 3) LocalStorage key for simple session
+    const AUTH_KEY = "tpn_auth_ok";
+
+    // 4) Optional: route default page
+    const DEFAULT_PAGE = "overview";
+
+
+    /* ===========================
+       Password Gate (client-side)
+       =========================== */
+
+    // SHA-256 helper (returns hex string)
+    async function sha256Hex(text) {
+      const enc = new TextEncoder().encode(text);
+      const buf = await crypto.subtle.digest("SHA-256", enc);
+      const bytes = new Uint8Array(buf);
+      return Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    // Expose a helper to generate a hash from console for your custom password:
+    //   await window.hashPW("my-new-password")
+    window.hashPW = async (pw) => {
+      const h = await sha256Hex(pw);
+      console.log("SHA-256(hex):", h);
+      return h;
+    };
+
+    async function tryLogin() {
+      const input = document.getElementById('pw');
+      const err = document.getElementById('err');
+      err.textContent = "";
+      const entered = input.value.trim();
+      if (!entered) { err.textContent = "Please enter a password."; return; }
+      try {
+        const hex = await sha256Hex(entered);
+        if (hex === PASSWORD_HASH_HEX.toLowerCase()) {
+          localStorage.setItem(AUTH_KEY, "1");
+          document.getElementById('gate').style.display = "none";
+          // Initialize dashboard after unlocking
+          initRouter();
+        } else {
+          err.textContent = "Incorrect password.";
+        }
+      } catch (e) {
+        err.textContent = "Crypto not supported in this browser.";
+      }
+    }
+
+    function gateIfNeeded() {
+      const ok = localStorage.getItem(AUTH_KEY) === "1";
+      if (ok) {
+        document.getElementById('gate').style.display = "none";
+      } else {
+        // Focus password
+        setTimeout(() => document.getElementById('pw').focus(), 50);
+      }
+      return ok;
+    }
+
+    document.getElementById('go').addEventListener('click', tryLogin);
+    document.getElementById('pw').addEventListener('keydown', (e)=>{
+      if (e.key === "Enter") tryLogin();
+    });
+
+    /* ===========================
+       Simple Router for Tabs
+       =========================== */
+    const frame = document.getElementById('reportFrame');
+    const tabs  = Array.from(document.querySelectorAll('.tab'));
+
+    function setActive(key) {
+      const url = PAGES[key];
+      if (!url) return;
+      frame.src = url;
+      tabs.forEach(btn => btn.setAttribute('aria-current', btn.dataset.key === key ? 'page' : 'false'));
+      history.replaceState(null, "", "#" + key);
+    }
+
+    function initRouter() {
+      const hash = (location.hash || ("#" + DEFAULT_PAGE)).slice(1);
+      setActive(PAGES[hash] ? hash : DEFAULT_PAGE);
+      tabs.forEach(btn => btn.addEventListener('click', () => setActive(btn.dataset.key)));
+    }
+
+    // Boot
+    window.addEventListener('load', () => {
+      if (gateIfNeeded()) initRouter();
+    });
+  </script>
+</body>
+</html>
